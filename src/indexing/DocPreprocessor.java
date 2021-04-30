@@ -1,5 +1,7 @@
 package indexing;
 
+import utilities.Constants;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -7,7 +9,7 @@ import java.util.StringTokenizer;
 
 public abstract class DocPreprocessor {
 
-    StopWordEliminationStrategy stopWordEliminationCheck = new StopWordEliminator(Main.stopWordsPath);
+    StopWordEliminationStrategy stopWordEliminationCheck = new StopWordEliminator(Constants.DEFAULT_STOPWORDS_PATH);
     StemmingStrategy stemmingStrategy = new PorterStemmer();
 
     public abstract List<String> parseTokens(String filePath) throws IOException;

@@ -1,14 +1,19 @@
 /* shiva created on 4/27/21 inside the package - PACKAGE_NAME */
 
+import indexing.Indexer;
 import searchEngine.SearchEngine;
 import store.KnowledgeBase;
 import webCrawler.Crawler;
+import webCrawler.Resource;
 
+import java.io.IOException;
+import java.util.List;
 import java.util.Scanner;
+import java.util.concurrent.ExecutionException;
 
 public class ConsoleMenu {
 
-    public void run(){
+    public void run() throws InterruptedException, ExecutionException, IOException {
         while (true){
             printMainOptions();
             int input = readOptionInput();
@@ -18,6 +23,10 @@ public class ConsoleMenu {
                     break;
                 }
                 case 2: {
+                    indexerMenu();
+                    break;
+                }
+                case 3: {
                     searchQueryMenu();
                     break;
                 }
@@ -27,8 +36,9 @@ public class ConsoleMenu {
     }
 
     private void printMainOptions(){
-        System.out.println("1. Crawl from URL");
-        System.out.println("2. Search queries");
+        System.out.println("1. Crawler");
+        System.out.println("2. Indexer");
+        System.out.println("3. Search engine");
         System.out.println("Enter option : ");
     }
 
@@ -36,7 +46,16 @@ public class ConsoleMenu {
         System.out.println("\tEnter your query (or 'q' to exit): ");
     }
 
-    private void searchQueryMenu() {
+    private void indexerMenu() throws IOException {
+        System.out.println("\tEnter the collection path " );
+        String collectionPath = readStringInput();
+        System.out.println("\tEnter the index destination path " );
+        String indexDestination = readStringInput();
+        Indexer indexer = new Indexer(collectionPath, indexDestination);
+        indexer.run();
+    }
+
+    private void searchQueryMenu() throws IOException {
         SearchEngine engine = new SearchEngine(KnowledgeBase.getDefault());
         while (true){
             String query = readStringInput();
@@ -50,11 +69,14 @@ public class ConsoleMenu {
         return scanner.nextLine();
     }
 
-    private void crawlFromURLMenu() {
+    private void crawlFromURLMenu() throws InterruptedException, ExecutionException, IOException {
         System.out.println("\tEnter the seed URL: ");
         String urlInput = readStringInput();
-        KnowledgeBase dump = Crawler.crawl(urlInput);
-        System.out.println("\nDumped after crawling at : " + dump.fileName);
+        System.out.println("\tEnter the destination to store crawled pages: ");
+        String destination = readStringInput();
+        Crawler crawler = new Crawler(urlInput, destination);
+        crawler.run();
+        System.out.println("\nDumped after crawling at : " + destination);
     }
 
     private int readOptionInput() {
@@ -63,6 +85,16 @@ public class ConsoleMenu {
             return Integer.parseInt(scanner.nextLine());
         } catch (Exception e){
             return 0;
+        }
+    }
+
+    public static void main(String[] args) throws Exception {
+        try {
+            String startPage = "https://cs.uic.edu/";
+            Crawler crawler = new Crawler(startPage, "dump/");
+            crawler.run();
+        } catch (Exception e) {
+            System.out.println("Error: " + e);
         }
     }
 }

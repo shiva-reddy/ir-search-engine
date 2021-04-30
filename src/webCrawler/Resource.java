@@ -24,6 +24,10 @@ public class Resource implements Serializable {
     }
 
 
+    public static Resource load(String path){
+        return null;
+    }
+
     public List<String> getChildren() {
         return children;
     }

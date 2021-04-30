@@ -4,6 +4,7 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.select.Collector;
 import org.jsoup.select.Elements;
+import utilities.Utils;
 
 import java.io.*;
 import java.net.MalformedURLException;
@@ -20,31 +21,21 @@ public class Crawler {
 
     private ExecutorService executor;
     private AtomicInteger counter = new AtomicInteger();
-    private List<Resource> pages = new LinkedList<>();
     private LinkedBlockingQueue<Future<Resource>> queue = new LinkedBlockingQueue();
 
     private ConcurrentMap<String, Integer> visitPageMap = new ConcurrentHashMap<>();
     private String domain;
     private String base = "dump/";
 
-    public Crawler(String domain) {
+    public Crawler(String domain, String destination) {
         executor = Executors.newFixedThreadPool(5);
         this.domain = domain;
+        this.base = destination;
     }
 
-    public static void main(String[] args) throws Exception {
-        try {
-            String startPage = "https://cs.uic.edu/";
-            List<Resource> pages = new Crawler(startPage).crawl(startPage);
+    public void run() throws InterruptedException, ExecutionException, IOException {
 
-        } catch (Exception e) {
-            System.out.println("Error: " + e);
-        }
-    }
-
-
-    public List<Resource> crawl(String link) throws InterruptedException, ExecutionException, IOException {
-        visitSiteUrlIfNotVisitedBefore(link);
+        visitSiteUrlIfNotVisitedBefore(domain);
 
         //wait so queue is ready
         Thread.sleep(1000);
@@ -53,19 +44,13 @@ public class Crawler {
             Resource added = queue.poll().get();
             if(added != null){
                 dumpResource(added);
-                pages.add(added);
             }
         }
         executor.shutdown();
-        return pages;
     }
 
     private void dumpResource(Resource res) throws IOException {
-        FileOutputStream f = new FileOutputStream(new File(base + "" + res.id + ""));
-        ObjectOutputStream o = new ObjectOutputStream(f);
-        o.writeObject(res);
-        o.close();
-        f.close();
+        Utils.dump(base + "" + res.id + "", res);
         System.out.println("Written " + res.id + " " + res.getLink());
         if(res.id > 3000) System.exit(0);
     }

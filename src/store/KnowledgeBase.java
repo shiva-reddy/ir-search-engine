@@ -1,28 +1,34 @@
 /* shiva created on 2/18/21 inside the package - com.solution */
 package store;
 
+import org.jgrapht.alg.interfaces.VertexScoringAlgorithm;
+import utilities.Constants;
+
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-public class KnowledgeBase {
+public class KnowledgeBase implements Serializable {
 
-    public final Map<String, Map<String, Integer>> termVsDocumentCount = new HashMap<>();
-    public final Set<String> documents = new HashSet<>();
-    public final Map<String, Integer> tokenVsTotalCount = new HashMap<>();
-    public String fileName;
+    public final Map<String, Double> documentLengths;
+    public final Map<String, Map<String, Integer>> termVsDocumentCount;
+    public final VertexScoringAlgorithm<String, Double> pageRankScores;
 
-    public static KnowledgeBase getDefault() {
+    protected KnowledgeBase(Map<String, Double> documentLengths,
+                            Map<String, Map<String, Integer>> termVsDocumentCount,
+                            VertexScoringAlgorithm<String, Double> pageRankScores) {
+        this.documentLengths = documentLengths;
+        this.termVsDocumentCount = termVsDocumentCount;
+        this.pageRankScores = pageRankScores;
     }
 
+    public static KnowledgeBase getDefault() {
+        return load(Constants.DEFAULT_KNOWLEDGE_BASE);
+    }
 
-    public void updateStat(String document, String term){
-        documents.add(document);
-        tokenVsTotalCount.put(term, tokenVsTotalCount.getOrDefault(term, 0) + 1);
-        if(!termVsDocumentCount.containsKey(term)) termVsDocumentCount.put(term, new HashMap<>());
-        termVsDocumentCount.get(term)
-                .put(document, termVsDocumentCount.get(term)
-                        .getOrDefault(document, 0) + 1);
+    private static KnowledgeBase load(String path){
+        return null;
     }
 }
