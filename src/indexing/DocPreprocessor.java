@@ -1,0 +1,26 @@
+package indexing;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.StringTokenizer;
+
+public abstract class DocPreprocessor {
+
+    StopWordEliminationStrategy stopWordEliminationCheck = new StopWordEliminator(Main.stopWordsPath);
+    StemmingStrategy stemmingStrategy = new PorterStemmer();
+
+    public abstract List<String> parseTokens(String filePath) throws IOException;
+
+    protected List<String> tokenize(String text){
+        List<String> tokens = new ArrayList<>();
+        text = text.replaceAll("[^a-zA-Z ]", "").toLowerCase(); //Remove punctuation
+        StringTokenizer tokenizer = new StringTokenizer(text, " "); //Split by whitespace
+        while (tokenizer.hasMoreElements()) {
+            String tok = tokenizer.nextToken();
+            if(stopWordEliminationCheck.isStopWord(tok)) continue;
+            tokens.add(stemmingStrategy.stemToken(tok));
+        }
+        return tokens;
+    }
+}
