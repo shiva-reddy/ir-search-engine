@@ -13,5 +13,6 @@ public class SearchEngineResult {
 
     public void print() {
         System.out.println("Result::");
+        documents.subList(0,3).forEach(entry -> System.out.println(entry.getKey()));
     }
 }

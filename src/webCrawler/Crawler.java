@@ -2,16 +2,14 @@ package webCrawler;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
-import org.jsoup.select.Collector;
-import org.jsoup.select.Elements;
+import utilities.Constants;
 import utilities.Utils;
 
 import java.io.*;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.ArrayList;
+import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
@@ -19,101 +17,90 @@ import java.util.stream.Collectors;
 
 public class Crawler {
 
-    private ExecutorService executor;
+    private ThreadPoolExecutor executor;
+    Collection<Future<?>> futures = new LinkedList<Future<?>>();
     private AtomicInteger counter = new AtomicInteger();
-    private LinkedBlockingQueue<Future<Resource>> queue = new LinkedBlockingQueue();
-
     private ConcurrentMap<String, Integer> visitPageMap = new ConcurrentHashMap<>();
     private String domain;
-    private String base = "dump/";
+    private String base;
+    private final int limit;
 
-    public Crawler(String domain, String destination) {
-        executor = Executors.newFixedThreadPool(5);
+    public Crawler(String domain, String destination, int limit) {
+        executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(3);
         this.domain = domain;
         this.base = destination;
+        this.limit = limit;
+    }
+
+    public Crawler(String domain, String destination) {
+        this(domain, destination, Constants.DEFAULT_DOCUMENT_LIMIT);
     }
 
     public void run() throws InterruptedException, ExecutionException, IOException {
-
-        visitSiteUrlIfNotVisitedBefore(domain);
-
-        //wait so queue is ready
-        Thread.sleep(1000);
-
-        while (!queue.isEmpty()) {
-            Resource added = queue.poll().get();
-            if(added != null){
-                dumpResource(added);
-            }
-        }
-        executor.shutdown();
+        scheduleLinkVisit(normalize(domain));
+        while (counter.get() <= limit);
+        for (Future<?> future : futures) future.get();
     }
 
     private void dumpResource(Resource res) throws IOException {
         Utils.dump(base + "" + res.id + "", res);
-        System.out.println("Written " + res.id + " " + res.getLink());
-        if(res.id > 3000) System.exit(0);
+        System.out.println("Downloaded " + res.id + " " + res.getLink());
     }
 
-    private void visitSiteUrlIfNotVisitedBefore(String visitSiteUrl) {
-        try {
-            final String url = normalize(visitSiteUrl);
-            if (visitPageMap.putIfAbsent(url, 0) == null) {
-                try {
-                    Future<Resource> submit = executor.submit(() -> {
-                        int x = counter.incrementAndGet();
-                        try {
-                            return visitLink(url, x);
-                        } catch (IOException e) {
-                            return null;
-                        }
-                    });
-                    queue.put(submit);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
+    private void scheduleLinkVisit(String link) {
+        int id = counter.incrementAndGet();
+        if(id > limit || visitPageMap.containsKey(link)) return;
+        visitPageMap.put(link, id);
+        futures.add(executor.submit(() -> {
+            try {
+                Resource resource = fetchResource(link, id);
+                dumpResource(resource);
+                resource.getChildren().forEach(l -> scheduleLinkVisit(l));
+            } catch (IOException e) {
+                e.printStackTrace();
             }
-        } catch (Exception e){
-            return;
-        }
+        }));
     }
 
     private String normalize(String url) {
-        if(!url.contains("?") && !url.endsWith("/")) url += '/';
+        if(url.isEmpty()) return url;
+        url = removeAnchor(url);
+        if(url.endsWith("/")) url = url.substring(0, url.length() - 1);
+        String mainDomain = url.substring(url.indexOf("//") + 2);
+        mainDomain = mainDomain.contains("www.") ? mainDomain.substring(mainDomain.indexOf("www.") + 4)
+                : mainDomain;
+        url = "https://" + mainDomain;
+        url = (!url.contains("?") && !url.endsWith("/")) ? url + '/' : url;
         return url;
     }
 
-    public Resource visitLink(String link, int x) throws IOException {
+    public Resource fetchResource(String link, int id) throws IOException {
         String uic = "uic.edu";
         Document doc = Jsoup.connect(link)
                 .userAgent("Mozilla/5.0 (Windows NT 6.1; WOW64; rv:23.0) Gecko/20100101 Firefox/23.0")
                 .get();
-        List<String> children = doc.select("a")
+        Set<String> children = doc.select("a")
                 .stream()
-                .map(el -> el.attr("abs:href"))
-                .map(l -> removeAnchor(l))
-                .filter(l -> canVisit(l))
-                .collect(Collectors.toList());
-        Resource page = new Resource(x, link, children, doc.text());
-        children.forEach(l -> visitSiteUrlIfNotVisitedBefore(l));
-        return page;
+                .map(el -> el.attr("abs:href").toLowerCase())
+                .filter(l -> l.startsWith("http") &&
+                             !FILTERS.matcher(link).matches() &&
+                             isValidDomain(link))
+                .map(l -> normalize(l))
+                .collect(Collectors.toSet());
+        return new Resource(id, link, children, doc.text());
     }
 
     private final static Pattern FILTERS = Pattern.compile(".*(\\.(css|js|gif|jpg"
-            + "|png|mp3|mp4|zip|gz))$");
+            + "|png|mp3|mp4|zip|gz|pdf))$");
 
-    private static boolean canVisit(String link){
-        link = link.toLowerCase();
-        return !FILTERS.matcher(link).matches()
-                && link.contains("uic.edu");
+    private boolean isValidDomain(String link) {
+        link = link.substring(link.indexOf("//") + 2);
+        link = link.substring(0, link.indexOf("/"));
+        return link.contains("uic.edu");
     }
 
     public static String removeAnchor(String href) {
-        int index = href.indexOf("#");
-        if (index == -1) {
-            return href;
-        }
-        return (href.substring(0, index));
+        return href.contains("#") ? href.substring(0, href.indexOf("#")) : href;
     }
 
 }

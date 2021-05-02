@@ -2,6 +2,7 @@
 package utilities;
 
 import java.io.*;
+import java.util.Objects;
 
 public class Utils {
 
@@ -11,6 +12,15 @@ public class Utils {
         o.writeObject(resource);
         o.close();
         f.close();
+    }
+
+    public static Object load(String path) throws IOException, ClassNotFoundException{
+        FileInputStream fi = new FileInputStream(new File(path));
+        ObjectInputStream oi = new ObjectInputStream(fi);
+        Object res = oi.readObject();
+        fi.close();
+        oi.close();
+        return res;
     }
 
     public static double log2(double val){

@@ -11,9 +11,12 @@ import java.util.List;
 import java.util.Scanner;
 import java.util.concurrent.ExecutionException;
 
+import static utilities.Constants.DEFAULT_CRAWL_DESITNATION;
+import static utilities.Constants.DEFAULT_SEED_URL;
+
 public class ConsoleMenu {
 
-    public void run() throws InterruptedException, ExecutionException, IOException {
+    public void run() throws Exception {
         while (true){
             printMainOptions();
             int input = readOptionInput();
@@ -46,7 +49,7 @@ public class ConsoleMenu {
         System.out.println("\tEnter your query (or 'q' to exit): ");
     }
 
-    private void indexerMenu() throws IOException {
+    private void indexerMenu() throws Exception {
         System.out.println("\tEnter the collection path " );
         String collectionPath = readStringInput();
         System.out.println("\tEnter the index destination path " );
@@ -55,7 +58,7 @@ public class ConsoleMenu {
         indexer.run();
     }
 
-    private void searchQueryMenu() throws IOException {
+    private void searchQueryMenu() throws Exception {
         SearchEngine engine = new SearchEngine(KnowledgeBase.getDefault());
         while (true){
             String query = readStringInput();
@@ -70,13 +73,14 @@ public class ConsoleMenu {
     }
 
     private void crawlFromURLMenu() throws InterruptedException, ExecutionException, IOException {
-        System.out.println("\tEnter the seed URL: ");
-        String urlInput = readStringInput();
-        System.out.println("\tEnter the destination to store crawled pages: ");
-        String destination = readStringInput();
-        Crawler crawler = new Crawler(urlInput, destination);
+//        System.out.println("\tEnter the seed URL: ");
+//        String urlInput = readStringInput();
+//        System.out.println("\tEnter the destination to store crawled pages: ");
+//        String destination = readStringInput();
+        System.out.println(DEFAULT_CRAWL_DESITNATION);
+        Crawler crawler = new Crawler(DEFAULT_SEED_URL, DEFAULT_CRAWL_DESITNATION);
         crawler.run();
-        System.out.println("\nDumped after crawling at : " + destination);
+        System.out.println("\nDumped after crawling at : " + DEFAULT_CRAWL_DESITNATION);
     }
 
     private int readOptionInput() {
@@ -85,16 +89,6 @@ public class ConsoleMenu {
             return Integer.parseInt(scanner.nextLine());
         } catch (Exception e){
             return 0;
-        }
-    }
-
-    public static void main(String[] args) throws Exception {
-        try {
-            String startPage = "https://cs.uic.edu/";
-            Crawler crawler = new Crawler(startPage, "dump/");
-            crawler.run();
-        } catch (Exception e) {
-            System.out.println("Error: " + e);
         }
     }
 }

@@ -22,19 +22,20 @@ public class Indexer {
         knowledgeBaseBuilder =  new KnowledgeBaseBuilder();
     }
 
-    public KnowledgeBase run() throws IOException {
+    public KnowledgeBase run() throws IOException, ClassNotFoundException {
         ResourceParser parser = new ResourceParser();
         File folder = new File(collectionPath);
 
         for(File doc : folder.listFiles()){
             Resource resource = Resource.load(doc.getPath());
+            System.out.println(resource.getLink());
             loadGraphInfo(resource);
             loadTdIdfInfo(resource, parser);
         }
 
         KnowledgeBase knowledgeBase = knowledgeBaseBuilder.build();
         Utils.dump(kbDesitnation, knowledgeBase);
-        return knowledgeBaseBuilder.build();
+        return knowledgeBase;
     }
 
     private void loadGraphInfo(Resource res){

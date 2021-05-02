@@ -2,21 +2,20 @@
 package webCrawler;
 
 import org.jsoup.select.Elements;
+import utilities.Utils;
 
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.io.*;
+import java.util.*;
 
 public class Resource implements Serializable {
 
     private String link;
 
-    private List<String> children = new ArrayList<>();
+    private Set<String> children;
     private String data;
     int id;
 
-    public Resource(int id, String link, List<String> children, String data) {
+    public Resource(int id, String link, Set<String> children, String data) {
         this.id = id;
         this.link = link;
         this.children = children;
@@ -24,11 +23,12 @@ public class Resource implements Serializable {
     }
 
 
-    public static Resource load(String path){
-        return null;
+    public static Resource load(String path) throws IOException, ClassNotFoundException {
+
+        return (Resource) Utils.load(path);
     }
 
-    public List<String> getChildren() {
+    public Set<String> getChildren() {
         return children;
     }
 

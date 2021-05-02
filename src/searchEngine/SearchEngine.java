@@ -19,14 +19,30 @@ public class SearchEngine {
     public SearchEngineResult searchQuery(String query) throws IOException {
         QueryParser queryParser = new QueryParser();
 
-        Map<String, Integer> tokenCounts = getCountMap(queryParser.parseTokens(query));
-        Map<String, Double> documentCosine = computeCosineSimilarityNumerators(knowledgeBase, tokenCounts);
-        divideByDocumentLengths(documentCosine, knowledgeBase.documentLengths);
+        Map<String, Integer> queryTokenCounts = getCountMap(queryParser.parseTokens(query));
 
-        List<Map.Entry<String, Double>> rankedDocuments = new ArrayList<>(documentCosine.entrySet());
+        Map<String, Double> documentVsCosine = computeCosineSimilarityNumerators(queryTokenCounts);
+        Map<String, Double> documentVsPageRankScores = knowledgeBase.getPageRankScores();
+
+        return new SearchEngineResult(computeResult(documentVsCosine, documentVsPageRankScores));
+    }
+
+    private List<Map.Entry<String, Double>> computeResult(Map<String, Double> documentVsCosine,
+                                              Map<String, Double> documentVsPageRankScores) {
+        Map<String, Double> result = new HashMap<>();
+
+        for(String doc : documentVsCosine.keySet()){
+            result.put(doc, combineParams(documentVsCosine.get(doc), documentVsPageRankScores.get(doc)));
+        }
+
+        List<Map.Entry<String, Double>> rankedDocuments = new ArrayList<>(result.entrySet());
         Collections.sort(rankedDocuments, (a, b) -> Double.compare(b.getValue(), a.getValue()));
 
-        return new SearchEngineResult(rankedDocuments);
+        return rankedDocuments;
+    }
+
+    private Double combineParams(Double cosineSimilarityScore, Double pageRankScore){
+        return cosineSimilarityScore + pageRankScore;
     }
 
     private Map<String, Integer> getCountMap(List<String> tokens) {
@@ -35,8 +51,7 @@ public class SearchEngine {
         return countMap;
     }
 
-    private Map<String, Double> computeCosineSimilarityNumerators(KnowledgeBase knowledgeBase,
-                                                                         Map<String, Integer> queryTokenCounts) {
+    private Map<String, Double> computeCosineSimilarityNumerators(Map<String, Integer> queryTokenCounts) {
         Map<String, Double> res = new HashMap<>();
         double N = knowledgeBase.documentLengths.size();
         queryTokenCounts.entrySet()
@@ -62,10 +77,11 @@ public class SearchEngine {
                                 res.put(document, res.getOrDefault(document, 0.0d) + weightTerm);
                             });
                 });
+        divideByDocumentLengths(res, knowledgeBase.documentLengths);
         return res;
     }
 
-    private void divideByDocumentLengths(Map<String, Double> documentCosine, Map<String, Double> documentLengths) {
+    private static void divideByDocumentLengths(Map<String, Double> documentCosine, Map<String, Double> documentLengths) {
         documentCosine
                 .entrySet()
                 .forEach(entry ->

@@ -3,7 +3,9 @@ package store;
 
 import org.jgrapht.alg.interfaces.VertexScoringAlgorithm;
 import utilities.Constants;
+import utilities.Utils;
 
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -14,21 +16,25 @@ public class KnowledgeBase implements Serializable {
 
     public final Map<String, Double> documentLengths;
     public final Map<String, Map<String, Integer>> termVsDocumentCount;
-    public final VertexScoringAlgorithm<String, Double> pageRankScores;
+    private final Map<String, Double> pageRankScores;
 
     protected KnowledgeBase(Map<String, Double> documentLengths,
                             Map<String, Map<String, Integer>> termVsDocumentCount,
                             VertexScoringAlgorithm<String, Double> pageRankScores) {
         this.documentLengths = documentLengths;
         this.termVsDocumentCount = termVsDocumentCount;
-        this.pageRankScores = pageRankScores;
+        this.pageRankScores = pageRankScores.getScores();
     }
 
-    public static KnowledgeBase getDefault() {
+    public Map<String, Double> getPageRankScores(){
+        return pageRankScores;
+    }
+
+    public static KnowledgeBase getDefault() throws IOException, ClassNotFoundException {
         return load(Constants.DEFAULT_KNOWLEDGE_BASE);
     }
 
-    private static KnowledgeBase load(String path){
-        return null;
+    private static KnowledgeBase load(String path) throws IOException, ClassNotFoundException {
+        return (KnowledgeBase) Utils.load(path);
     }
 }

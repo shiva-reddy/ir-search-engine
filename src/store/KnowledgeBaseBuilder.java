@@ -18,13 +18,13 @@ public class KnowledgeBaseBuilder {
     public final Map<String, Integer> tokenVsTotalCount = new HashMap<>();
     public final DefaultDirectedGraph<String, DefaultEdge> graph = new DefaultDirectedGraph<>(DefaultEdge.class);
 
-    public void updateStat(String document, String term){
-        documents.add(document);
+    public void updateStat(String documentID, String term){
+        documents.add(documentID);
         tokenVsTotalCount.put(term, tokenVsTotalCount.getOrDefault(term, 0) + 1);
         if(!termVsDocumentCount.containsKey(term)) termVsDocumentCount.put(term, new HashMap<>());
         termVsDocumentCount.get(term)
-                .put(document, termVsDocumentCount.get(term)
-                        .getOrDefault(document, 0) + 1);
+                .put(documentID, termVsDocumentCount.get(term)
+                        .getOrDefault(documentID, 0) + 1);
     }
 
     public KnowledgeBase build() throws IOException {
