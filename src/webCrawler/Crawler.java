@@ -8,7 +8,6 @@ import utilities.Utils;
 import java.io.*;
 import java.util.Collection;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.Set;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -26,7 +25,7 @@ public class Crawler {
     private final int limit;
 
     public Crawler(String domain, String destination, int limit) {
-        executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(3);
+        executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(4);
         this.domain = domain;
         this.base = destination;
         this.limit = limit;
@@ -55,9 +54,9 @@ public class Crawler {
             try {
                 Resource resource = fetchResource(link, id);
                 dumpResource(resource);
-                resource.getChildren().forEach(l -> scheduleLinkVisit(l));
+                resource.getExternalLinks().forEach(l -> scheduleLinkVisit(l));
             } catch (IOException e) {
-                e.printStackTrace();
+                System.out.println("Skipped " + link);
             }
         }));
     }
@@ -87,7 +86,15 @@ public class Crawler {
                              isValidDomain(link))
                 .map(l -> normalize(l))
                 .collect(Collectors.toSet());
-        return new Resource(id, link, children, doc.text());
+        String headerText = doc.select("h1").text()
+                + " "
+                + doc.select("h2").text()
+                + " "
+                + doc.select("h3").text()
+                + " "
+                + doc.select("h4").text();
+        String boldText = doc.select("b").text();
+        return new Resource(id, link, children, doc.text(), headerText, boldText);
     }
 
     private final static Pattern FILTERS = Pattern.compile(".*(\\.(css|js|gif|jpg"

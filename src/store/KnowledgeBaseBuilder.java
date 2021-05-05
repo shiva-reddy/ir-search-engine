@@ -4,55 +4,37 @@ package store;
 import org.jgrapht.alg.scoring.PageRank;
 import org.jgrapht.graph.DefaultDirectedGraph;
 import org.jgrapht.graph.DefaultEdge;
-import utilities.Utils;
 
 import java.io.IOException;
 import java.util.*;
 
-import static utilities.Utils.log2;
-
 public class KnowledgeBaseBuilder {
 
-    public final Map<String, Map<String, Integer>> termVsDocumentCount = new HashMap<>();
     public final Set<String> documents = new HashSet<>();
-    public final Map<String, Integer> tokenVsTotalCount = new HashMap<>();
     public final DefaultDirectedGraph<String, DefaultEdge> graph = new DefaultDirectedGraph<>(DefaultEdge.class);
+    public final InvertedIndexBuilder textIndexBuilder = new InvertedIndexBuilder(),
+                                      headerIndexBuilder = new InvertedIndexBuilder();
 
-    public void updateStat(String documentID, String term){
-        documents.add(documentID);
-        tokenVsTotalCount.put(term, tokenVsTotalCount.getOrDefault(term, 0) + 1);
-        if(!termVsDocumentCount.containsKey(term)) termVsDocumentCount.put(term, new HashMap<>());
-        termVsDocumentCount.get(term)
-                .put(documentID, termVsDocumentCount.get(term)
+    public void updateStat(String documentID, String term, InvertedIndexBuilder index){
+        if(!index.termVsDocumentCount.containsKey(term)) index.termVsDocumentCount.put(term, new HashMap<>());
+        index.termVsDocumentCount.get(term)
+                .put(documentID, index.termVsDocumentCount.get(term)
                         .getOrDefault(documentID, 0) + 1);
     }
 
-    public KnowledgeBase build() throws IOException {
-        return new KnowledgeBase(computeDocumentLengths(), termVsDocumentCount, new PageRank<>(graph));
+    public void updateHeaderStat(String documentID, String term){
+        documents.add(documentID);
+        updateStat(documentID, term, headerIndexBuilder);
     }
 
-    private Map<String, Double> computeDocumentLengths() {
-        Map<String, Double> res = new HashMap<>();
-        int N = documents.size();
-        List<Double> vals = new ArrayList<>();
-        termVsDocumentCount
-                .entrySet()
-                .forEach(entry -> {
-                    String term = entry.getKey();
-                    Map<String, Integer> documentsWithTerm = entry.getValue();
-                    documentsWithTerm
-                            .entrySet()
-                            .forEach(_entry -> {
-                                String document = _entry.getKey();
-                                Double docTF = _entry.getValue().doubleValue();
-                                Double docIDF = log2(N / documentsWithTerm.size());
-                                Double weight =  docTF * docIDF;
-                                vals.add(Math.pow(weight, 2));
-                                res.put(document, res.getOrDefault(document, 0.0d) + Math.pow(weight, 2));
-                            });
-                });
-        res.entrySet().forEach(entry -> res.put(entry.getKey(), Math.sqrt(entry.getValue())));
-        return res;
+    public void updateTextStat(String documentID, String term){
+        documents.add(documentID);
+        updateStat(documentID, term, textIndexBuilder);
+    }
+
+    public KnowledgeBase build() throws IOException {
+        System.out.println(documents.size());
+        return new KnowledgeBase(textIndexBuilder.build(documents.size()), headerIndexBuilder.build(documents.size()), new PageRank<>(graph));
     }
 
 }

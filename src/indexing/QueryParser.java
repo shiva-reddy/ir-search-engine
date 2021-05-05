@@ -10,4 +10,9 @@ public class QueryParser extends DocPreprocessor{
     public List<String> parseTokens(String input) throws IOException {
         return tokenize(input);
     }
+
+    public static List<String> parse(String input) throws IOException {
+        QueryParser queryParser = new QueryParser();
+        return queryParser.parseTokens(input);
+    }
 }

@@ -14,15 +14,21 @@ import java.util.Set;
 
 public class KnowledgeBase implements Serializable {
 
-    public final Map<String, Double> documentLengths;
-    public final Map<String, Map<String, Integer>> termVsDocumentCount;
+    public InvertedIndex getTextIdx() {
+        return textIdx;
+    }
+
+    public InvertedIndex getHeaderIdx() {
+        return headerIdx;
+    }
+
+    private final InvertedIndex textIdx, headerIdx;
     private final Map<String, Double> pageRankScores;
 
-    protected KnowledgeBase(Map<String, Double> documentLengths,
-                            Map<String, Map<String, Integer>> termVsDocumentCount,
+    protected KnowledgeBase(InvertedIndex textIdx, InvertedIndex headerIdx,
                             VertexScoringAlgorithm<String, Double> pageRankScores) {
-        this.documentLengths = documentLengths;
-        this.termVsDocumentCount = termVsDocumentCount;
+        this.textIdx = textIdx;
+        this.headerIdx = headerIdx;
         this.pageRankScores = pageRankScores.getScores();
     }
 

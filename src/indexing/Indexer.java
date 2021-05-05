@@ -3,6 +3,7 @@ package indexing;
 
 import org.jgrapht.graph.DefaultDirectedGraph;
 import org.jgrapht.graph.DefaultEdge;
+import store.InvertedIndex;
 import store.KnowledgeBase;
 import store.KnowledgeBaseBuilder;
 import utilities.Utils;
@@ -23,14 +24,14 @@ public class Indexer {
     }
 
     public KnowledgeBase run() throws IOException, ClassNotFoundException {
-        ResourceParser parser = new ResourceParser();
+        ResourceTextParser parser = new ResourceTextParser();
+        ResourceMetaParser metaParser = new ResourceMetaParser();
         File folder = new File(collectionPath);
 
         for(File doc : folder.listFiles()){
             Resource resource = Resource.load(doc.getPath());
-            System.out.println(resource.getLink());
             loadGraphInfo(resource);
-            loadTdIdfInfo(resource, parser);
+            loadTfIdfInfo(resource, parser, metaParser);
         }
 
         KnowledgeBase knowledgeBase = knowledgeBaseBuilder.build();
@@ -41,16 +42,18 @@ public class Indexer {
     private void loadGraphInfo(Resource res){
         DefaultDirectedGraph<String, DefaultEdge> graph = knowledgeBaseBuilder.graph;
         if(!graph.containsVertex(res.getLink())) graph.addVertex(res.getLink());
-        for(String neighbour : res.getChildren()){
+        for(String neighbour : res.getExternalLinks()){
             if(!graph.containsVertex(neighbour)) graph.addVertex(neighbour);
             graph.addEdge(res.getLink(), neighbour);
         }
     }
 
-    private void loadTdIdfInfo(Resource resource, ResourceParser parser) throws IOException {
-        String docId = resource.getLink();
-        parser.parseTokens(resource)
-                .forEach(token -> knowledgeBaseBuilder.updateStat(docId, token));
+    private void loadTfIdfInfo(Resource resource, ResourceTextParser textParser, ResourceMetaParser metaParser) throws IOException {
+        String document = resource.getLink();
+        textParser.parseTokens(resource)
+                .forEach(token -> knowledgeBaseBuilder.updateTextStat(document, token));
+//        metaParser.parseTokens(resource)
+//                .forEach(token -> knowledgeBaseBuilder.updateHeaderStat(document, token));
     }
 
 }

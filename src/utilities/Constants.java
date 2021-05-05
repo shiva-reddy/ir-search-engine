@@ -6,5 +6,5 @@ public class Constants {
     public static final String DEFAULT_CRAWL_DESITNATION = "dump/";
     public static final String DEFAULT_SEED_URL = "https://cs.uic.edu";
     public static final String DEFAULT_STOPWORDS_PATH = "./stopwords.txt";
-    public static final int DEFAULT_DOCUMENT_LIMIT = 3000;
+    public static final int DEFAULT_DOCUMENT_LIMIT = 6000;
 }

@@ -1,7 +1,6 @@
 /* shiva created on 4/27/21 inside the package - webCrawler */
 package webCrawler;
 
-import org.jsoup.select.Elements;
 import utilities.Utils;
 
 import java.io.*;
@@ -11,25 +10,26 @@ public class Resource implements Serializable {
 
     private String link;
 
-    private Set<String> children;
-    private String data;
+    private Set<String> externalLinks;
+    private String allText, headerText, boldText;
     int id;
 
-    public Resource(int id, String link, Set<String> children, String data) {
+    public Resource(int id, String link, Set<String> externalLinks, String allText, String headerText, String boldText) {
         this.id = id;
         this.link = link;
-        this.children = children;
-        this.data = data;
+        this.externalLinks = externalLinks;
+        this.allText = allText;
+        this.headerText = headerText;
+        this.boldText = boldText;
     }
 
 
     public static Resource load(String path) throws IOException, ClassNotFoundException {
-
         return (Resource) Utils.load(path);
     }
 
-    public Set<String> getChildren() {
-        return children;
+    public Set<String> getExternalLinks() {
+        return externalLinks;
     }
 
     public String getLink(){
@@ -37,6 +37,14 @@ public class Resource implements Serializable {
     }
 
     public String getText() {
-        return data;
+        return allText;
+    }
+
+    public String getHeaderText(){
+        return headerText;
+    }
+
+    public String getBoldText(){
+        return boldText;
     }
 }
