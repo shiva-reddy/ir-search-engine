@@ -52,8 +52,8 @@ public class Indexer {
         String document = resource.getLink();
         textParser.parseTokens(resource)
                 .forEach(token -> knowledgeBaseBuilder.updateTextStat(document, token));
-//        metaParser.parseTokens(resource)
-//                .forEach(token -> knowledgeBaseBuilder.updateHeaderStat(document, token));
+        metaParser.parseTokens(resource)
+                .forEach(token -> knowledgeBaseBuilder.updateHeaderStat(document, token));
     }
 
 }

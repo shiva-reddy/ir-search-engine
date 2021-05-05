@@ -17,6 +17,10 @@ public class SearchEngineResult {
         }
     }
 
+    public List<Map.Entry<String, Metrics>> getDocuments() {
+        return documents;
+    }
+
     List<Map.Entry<String, Metrics>> documents = new ArrayList<>();
 
     SearchEngineResult(List<Map.Entry<String, Metrics>> documents){
@@ -26,10 +30,6 @@ public class SearchEngineResult {
     public void print() {
         System.out.println("Result::");
         documents.subList(0,Integer.min(10, documents.size()))
-                .forEach(entry -> System.out.println(entry.getKey()
-                + " " + entry.getValue().cosineSimilarityScore +
-                " " + entry.getValue().pageRankScore +
-                " " + entry.getValue().combined
-                ));
+                .forEach(entry -> System.out.println(entry.getKey()));
     }
 }

@@ -73,10 +73,6 @@ public class ConsoleMenu {
     }
 
     private void crawlFromURLMenu() throws InterruptedException, ExecutionException, IOException {
-//        System.out.println("\tEnter the seed URL: ");
-//        String urlInput = readStringInput();
-//        System.out.println("\tEnter the destination to store crawled pages: ");
-//        String destination = readStringInput();
         System.out.println(DEFAULT_CRAWL_DESITNATION);
         Crawler crawler = new Crawler(DEFAULT_SEED_URL, DEFAULT_CRAWL_DESITNATION);
         crawler.run();

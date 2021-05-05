@@ -3,6 +3,7 @@ package searchEngine;/* shiva created on 4/27/21 inside the package - PACKAGE_NA
 import indexing.QueryParser;
 import store.InvertedIndex;
 import store.KnowledgeBase;
+import utilities.Utils;
 
 import java.io.IOException;
 import java.util.*;
@@ -20,14 +21,8 @@ public class SearchEngine {
 
     public SearchEngineResult searchQuery(String query) throws IOException {
 
-        Map<String, Integer> queryTokenCounts = getCountMap(QueryParser.parse(query));
-        System.out.println(queryTokenCounts.toString());
-        System.out.println(knowledgeBase.getHeaderInvertedIdx().termVsDocumentCount.toString());
-        Map<String, Double> documentVsCosineScore = computeCosineSimilarity(queryTokenCounts, knowledgeBase.getTextInvertedIdx());
-        Map<String, Double> top10 = filterTop(documentVsCosineScore, 10, (d1, d2) -> Double.compare(d1, d2));
-
-        for(Map.Entry<String, Double> e : top10.entrySet()) System.out.println(e.getKey() + " " + e.getValue());
-        System.out.println("-----------------");
+        Map<String, Integer> queryTokenCounts = getTokenCounts(QueryParser.parse(query));
+        Map<String, Double> documentVsCosineScore = getCombinedCosineScore(queryTokenCounts);
         Map<String, Double> documentVsPageRankScores = knowledgeBase.getPageRankScores();
 
         return new SearchEngineResult(computeResult(documentVsCosineScore, documentVsPageRankScores));
@@ -45,7 +40,7 @@ public class SearchEngine {
 
     private List<Map.Entry<String, SearchEngineResult.Metrics>> computeResult(Map<String, Double> documentVsCosine,
                                                                               Map<String, Double> documentVsPageRankScores) {
-        Map<String, Double> topDocsCosine = fetchTopDocs(documentVsCosine);
+        Map<String, Double> topDocsCosine = Utils.filterTop(documentVsCosine, 10, (d1, d2) -> Double.compare(d2, d1));
         Map<String, Double> topDocsPageRank = filterAndNormalize(topDocsCosine.keySet(), knowledgeBase.getPageRankScores());
 
         PageRankCombinationStrategy pageRankCombinationStrategy = new PageRankCombinationStrategy();
@@ -68,15 +63,7 @@ public class SearchEngine {
                 .collect(Collectors.toMap(document -> document, document -> pageRankScores.get(document))));
     }
 
-    private Map<String, Double> fetchTopDocs(Map<String, Double> documentVsCosine){
-        List<Map.Entry<String, Double>> rankedDocuments = new ArrayList<>(documentVsCosine.entrySet());
-        Collections.sort(rankedDocuments, (e1, e2) -> Double.compare(e1.getValue(), e2.getValue()));
-        return rankedDocuments.subList(0, Math.min(10, rankedDocuments.size()))
-                .stream()
-                .collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue()));
-    }
-
-    private Map<String, Integer> getCountMap(List<String> tokens) {
+    private Map<String, Integer> getTokenCounts(List<String> tokens) {
         Map<String, Integer> countMap = new HashMap<>();
         tokens.forEach(tok -> countMap.put(tok , countMap.getOrDefault(tok, 0) + 1));
         return countMap;

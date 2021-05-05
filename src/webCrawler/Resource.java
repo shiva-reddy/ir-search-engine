@@ -11,13 +11,20 @@ public class Resource implements Serializable {
     private String link;
 
     private Set<String> externalLinks;
+
+    public Set<String> getSubDomainLinks() {
+        return subDomainLinks;
+    }
+
+    private Set<String> subDomainLinks;
     private String allText, headerText, boldText;
     int id;
 
-    public Resource(int id, String link, Set<String> externalLinks, String allText, String headerText, String boldText) {
+    public Resource(int id, String link, Set<String> allExternalLinks,Set<String> subDomainLinks,  String allText, String headerText, String boldText) {
         this.id = id;
         this.link = link;
-        this.externalLinks = externalLinks;
+        this.externalLinks = allExternalLinks;
+        this.subDomainLinks = subDomainLinks;
         this.allText = allText;
         this.headerText = headerText;
         this.boldText = boldText;

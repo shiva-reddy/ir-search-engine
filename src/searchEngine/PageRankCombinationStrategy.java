@@ -3,7 +3,7 @@ package searchEngine;
 
 public class PageRankCombinationStrategy implements MetricCombinationStrategy{
     @Override
-    public Double combine(Double m1, Double m2) {
-        return m1;
+    public Double combine(Double cosine, Double pageRank) {
+        return cosine*0.95 + pageRank*0.15;
     }
 }

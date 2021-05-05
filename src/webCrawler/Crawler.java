@@ -6,7 +6,10 @@ import utilities.Constants;
 import utilities.Utils;
 
 import java.io.*;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Set;
 import java.util.concurrent.*;
@@ -39,6 +42,7 @@ public class Crawler {
         scheduleLinkVisit(normalize(domain));
         while (counter.get() <= limit);
         for (Future<?> future : futures) future.get();
+        Utils.dump("crawled_pages", (Serializable) visitPageMap.keySet());
     }
 
     private void dumpResource(Resource res) throws IOException {
@@ -47,6 +51,7 @@ public class Crawler {
     }
 
     private void scheduleLinkVisit(String link) {
+        if(!isValidDomain(link)) return;
         int id = counter.incrementAndGet();
         if(id > limit || visitPageMap.containsKey(link)) return;
         visitPageMap.put(link, id);
@@ -54,14 +59,14 @@ public class Crawler {
             try {
                 Resource resource = fetchResource(link, id);
                 dumpResource(resource);
-                resource.getExternalLinks().forEach(l -> scheduleLinkVisit(l));
+                resource.getSubDomainLinks().forEach(l -> scheduleLinkVisit(normalize(l)));
             } catch (IOException e) {
                 System.out.println("Skipped " + link);
             }
         }));
     }
 
-    private String normalize(String url) {
+    public static String normalize(String url) {
         if(url.isEmpty()) return url;
         url = removeAnchor(url);
         if(url.endsWith("/")) url = url.substring(0, url.length() - 1);
@@ -78,14 +83,17 @@ public class Crawler {
         Document doc = Jsoup.connect(link)
                 .userAgent("Mozilla/5.0 (Windows NT 6.1; WOW64; rv:23.0) Gecko/20100101 Firefox/23.0")
                 .get();
-        Set<String> children = doc.select("a")
+
+        Set<String> allExternalLinks =  doc.select("a")
                 .stream()
                 .map(el -> el.attr("abs:href").toLowerCase())
-                .filter(l -> l.startsWith("http") &&
-                             !FILTERS.matcher(link).matches() &&
-                             isValidDomain(link))
-                .map(l -> normalize(l))
+                .filter(l -> l.startsWith("http") && !FILTERS.matcher(link).matches())
                 .collect(Collectors.toSet());
+
+        Set<String> subdomainLinks = allExternalLinks.stream()
+                .filter(l -> isValidDomain(link))
+                .collect(Collectors.toSet());
+
         String headerText = doc.select("h1").text()
                 + " "
                 + doc.select("h2").text()
@@ -93,17 +101,21 @@ public class Crawler {
                 + doc.select("h3").text()
                 + " "
                 + doc.select("h4").text();
+
         String boldText = doc.select("b").text();
-        return new Resource(id, link, children, doc.text(), headerText, boldText);
+        return new Resource(id, link, allExternalLinks, subdomainLinks, doc.text(), headerText, boldText);
     }
 
     private final static Pattern FILTERS = Pattern.compile(".*(\\.(css|js|gif|jpg"
             + "|png|mp3|mp4|zip|gz|pdf))$");
 
-    private boolean isValidDomain(String link) {
-        link = link.substring(link.indexOf("//") + 2);
-        link = link.substring(0, link.indexOf("/"));
-        return link.contains("uic.edu");
+    public static boolean isValidDomain(String link) {
+        try{
+            URL url = new URL(link);
+            return url.getHost().contains("uic.edu");
+        } catch (Exception e){
+            throw new RuntimeException();
+        }
     }
 
     public static String removeAnchor(String href) {
