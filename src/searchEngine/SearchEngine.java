@@ -21,8 +21,9 @@ public class SearchEngine {
     public SearchEngineResult searchQuery(String query) throws IOException {
 
         Map<String, Integer> queryTokenCounts = getCountMap(QueryParser.parse(query));
-        System.out.println(knowledgeBase.getHeaderIdx().termVsDocumentCount.toString());
-        Map<String, Double> documentVsCosineScore = computeCosineSimilarity(queryTokenCounts, knowledgeBase.getTextIdx());
+        System.out.println(queryTokenCounts.toString());
+        System.out.println(knowledgeBase.getHeaderInvertedIdx().termVsDocumentCount.toString());
+        Map<String, Double> documentVsCosineScore = computeCosineSimilarity(queryTokenCounts, knowledgeBase.getTextInvertedIdx());
         Map<String, Double> top10 = filterTop(documentVsCosineScore, 10, (d1, d2) -> Double.compare(d1, d2));
 
         for(Map.Entry<String, Double> e : top10.entrySet()) System.out.println(e.getKey() + " " + e.getValue());
@@ -34,8 +35,8 @@ public class SearchEngine {
 
     private Map<String, Double> getCombinedCosineScore(Map<String, Integer> queryTokenCounts){
         CosineSimilarityCombinationStrategy strategy = new CosineSimilarityCombinationStrategy();
-        Map<String, Double> headerCosineScores = computeCosineSimilarity(queryTokenCounts, knowledgeBase.getHeaderIdx());
-        Map<String, Double> textCosineScores = computeCosineSimilarity(queryTokenCounts, knowledgeBase.getTextIdx());
+        Map<String, Double> headerCosineScores = computeCosineSimilarity(queryTokenCounts, knowledgeBase.getHeaderInvertedIdx());
+        Map<String, Double> textCosineScores = computeCosineSimilarity(queryTokenCounts, knowledgeBase.getTextInvertedIdx());
         Map<String, Double> combinedCosineScores = new HashMap<>();
         textCosineScores.keySet().forEach(document -> combinedCosineScores.put(document,
                 strategy.combine(headerCosineScores.get(document), textCosineScores.get(document))));

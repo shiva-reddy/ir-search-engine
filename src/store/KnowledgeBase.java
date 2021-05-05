@@ -14,11 +14,11 @@ import java.util.Set;
 
 public class KnowledgeBase implements Serializable {
 
-    public InvertedIndex getTextIdx() {
+    public InvertedIndex getTextInvertedIdx() {
         return textIdx;
     }
 
-    public InvertedIndex getHeaderIdx() {
+    public InvertedIndex getHeaderInvertedIdx() {
         return headerIdx;
     }
 
