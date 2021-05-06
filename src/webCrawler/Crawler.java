@@ -31,6 +31,8 @@ public class Crawler {
         executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(maxThreads);
         this.domain = domain;
         this.base = destination;
+        File f = new File(base);
+        if(!f.exists()) f.mkdir();
         this.sleepTime = sleepTime;
         this.limit = limit;
     }
