@@ -16,7 +16,7 @@ public class ResourceMetaParser extends DocPreprocessor{
         data += multiply(linkInfo, 2);
         data += multiply(resource.getHeaderText(), 3);
         data += multiply(resource.getBoldText(), 3);
-        return parseTokens(resource.getText());
+        return parseTokens(data);
     }
 
     private static String multiply(String text, int times){

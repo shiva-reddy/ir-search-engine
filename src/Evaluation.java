@@ -28,7 +28,7 @@ public class Evaluation {
     }
 
     public static void runEvaluations() throws IOException, ClassNotFoundException {
-        String base = "evaluations/";
+        String base = "evaluations/google-search-outputs/";
         List<String> queries = Arrays.asList("Course schedule",
                 "computer science",
                 "Library",
@@ -53,6 +53,7 @@ public class Evaluation {
             if(urlsInExternalSite.size() == 0) return new EvaluationMetric(query, 0.0d, 0.0d);
             SearchEngine searchEngine = new SearchEngine(KnowledgeBase.getDefault());
             SearchEngineResult result = searchEngine.searchQuery(query);
+            result.print();
             Double count = 0.0d;
             for (Map.Entry<String, SearchEngineResult.Metrics> entry : result.getDocuments()) {
                 String document = entry.getKey();

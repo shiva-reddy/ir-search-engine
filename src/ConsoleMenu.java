@@ -15,6 +15,7 @@ import static utilities.Constants.DEFAULT_SEED_URL;
 public class ConsoleMenu {
 
     public void quickRun() throws Exception {
+        System.out.println("\tLoading index.....");
         searchQueryMenu(KnowledgeBase.getDefault());
     }
 
@@ -32,6 +33,7 @@ public class ConsoleMenu {
                     break;
                 }
                 case 3: {
+                    System.out.println("\tLoading index.....");
                     searchQueryMenu(getKnowledgeBase());
                     break;
                 }
