@@ -4,10 +4,8 @@ import indexing.Indexer;
 import searchEngine.SearchEngine;
 import store.KnowledgeBase;
 import webCrawler.Crawler;
-import webCrawler.Resource;
 
 import java.io.IOException;
-import java.util.List;
 import java.util.Scanner;
 import java.util.concurrent.ExecutionException;
 
@@ -16,9 +14,13 @@ import static utilities.Constants.DEFAULT_SEED_URL;
 
 public class ConsoleMenu {
 
-    public void run() throws Exception {
+    public void quickRun() throws Exception {
+        searchQueryMenu(KnowledgeBase.getDefault());
+    }
+
+    public void runManual() throws Exception {
         while (true){
-            printMainOptions();
+            printManualOptions();
             int input = readOptionInput();
             switch (input){
                 case 1: {
@@ -30,7 +32,7 @@ public class ConsoleMenu {
                     break;
                 }
                 case 3: {
-                    searchQueryMenu();
+                    searchQueryMenu(getKnowledgeBase());
                     break;
                 }
                 default: return;
@@ -38,15 +40,21 @@ public class ConsoleMenu {
         }
     }
 
-    private void printMainOptions(){
-        System.out.println("1. Crawler");
-        System.out.println("2. Indexer");
-        System.out.println("3. Search engine");
-        System.out.println("Enter option : ");
+    private KnowledgeBase getKnowledgeBase() throws IOException, ClassNotFoundException {
+        return KnowledgeBase.load(request("\tEnter the knowledge base index path: "));
+    }
+
+    private void printManualOptions(){
+        System.out.println();
+        System.out.println("\t1. Crawler");
+        System.out.println("\t2. Indexer");
+        System.out.println("\t3. Search engine");
+        System.out.println("\tEnter option : ");
     }
 
     private void printQueryMenuOptions(){
-        System.out.println("\tEnter your query (or 'q' to exit): ");
+        System.out.println();
+        System.out.println("\t\tEnter your query (or 'q' to exit): ");
     }
 
     private void indexerMenu() throws Exception {
@@ -58,9 +66,10 @@ public class ConsoleMenu {
         indexer.run();
     }
 
-    private void searchQueryMenu() throws Exception {
+    private void searchQueryMenu(KnowledgeBase knowledgeBase) throws Exception {
         SearchEngine engine = new SearchEngine(KnowledgeBase.getDefault());
         while (true){
+            printQueryMenuOptions();
             String query = readStringInput();
             if(query.equals("q")) return;
             engine.searchQuery(query).print();
@@ -73,10 +82,18 @@ public class ConsoleMenu {
     }
 
     private void crawlFromURLMenu() throws InterruptedException, ExecutionException, IOException {
-        System.out.println(DEFAULT_CRAWL_DESITNATION);
-        Crawler crawler = new Crawler(DEFAULT_SEED_URL, DEFAULT_CRAWL_DESITNATION);
+        String seed = request("\t\tPlease enter the seed URL: ");
+        int pagesToDownload = Integer.parseInt(request("\t\tPlease enter the number of pages to crawl: "));
+        String destination = request("\t\tPlease enter the destination to save the crawled pages");
+        int maxThreads = Integer.parseInt(request("\t\tPlease enter the maximum number of threads to use"));
+        int sleepTimeout = Integer.parseInt(request(("\t\tPlease enter the milliseconds to sleep between requests")));
+        Crawler crawler = new Crawler(seed, destination, pagesToDownload ,sleepTimeout,  maxThreads);
         crawler.run();
-        System.out.println("\nDumped after crawling at : " + DEFAULT_CRAWL_DESITNATION);
+    }
+
+    private String request(String question){
+        System.out.println(question);
+        return readStringInput();
     }
 
     private int readOptionInput() {
@@ -85,6 +102,22 @@ public class ConsoleMenu {
             return Integer.parseInt(scanner.nextLine());
         } catch (Exception e){
             return 0;
+        }
+    }
+
+    public void run() throws Exception {
+        System.out.println("1.Quick run");
+        System.out.println("2.Manual");
+        int option = readOptionInput();
+        switch (option){
+            case 1: {
+                quickRun();
+                break;
+            }
+            case 2:{
+                runManual();
+                break;
+            }
         }
     }
 }

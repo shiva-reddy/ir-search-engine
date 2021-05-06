@@ -25,17 +25,14 @@ public class Crawler {
     private ConcurrentMap<String, Integer> visitPageMap = new ConcurrentHashMap<>();
     private String domain;
     private String base;
-    private final int limit;
+    private final int limit, sleepTime;
 
-    public Crawler(String domain, String destination, int limit) {
-        executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(4);
+    public Crawler(String domain, String destination, int limit,  int sleepTime, int maxThreads) {
+        executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(maxThreads);
         this.domain = domain;
         this.base = destination;
+        this.sleepTime = sleepTime;
         this.limit = limit;
-    }
-
-    public Crawler(String domain, String destination) {
-        this(domain, destination, Constants.DEFAULT_DOCUMENT_LIMIT);
     }
 
     public void run() throws InterruptedException, ExecutionException, IOException {
@@ -43,6 +40,7 @@ public class Crawler {
         while (counter.get() <= limit);
         for (Future<?> future : futures) future.get();
         Utils.dump("crawled_pages", (Serializable) visitPageMap.keySet());
+        Thread.sleep(sleepTime);
     }
 
     private void dumpResource(Resource res) throws IOException {
@@ -61,6 +59,7 @@ public class Crawler {
                 dumpResource(resource);
                 resource.getSubDomainLinks().forEach(l -> scheduleLinkVisit(normalize(l)));
             } catch (IOException e) {
+                e.printStackTrace();
                 System.out.println("Skipped " + link);
             }
         }));

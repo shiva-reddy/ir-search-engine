@@ -1,3 +1,4 @@
-Manifest-Version: 1.0
+iManifest-Version: 1.0
 Main-Class: Main
+Class-Path: lib/jgrapht-core-1.5.1.jar lib/jheaps-0.13.jar lib/jsoup-1.13.1.jar
 

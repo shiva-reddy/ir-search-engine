@@ -40,7 +40,7 @@ public class KnowledgeBase implements Serializable {
         return load(Constants.DEFAULT_KNOWLEDGE_BASE);
     }
 
-    private static KnowledgeBase load(String path) throws IOException, ClassNotFoundException {
+    public static KnowledgeBase load(String path) throws IOException, ClassNotFoundException {
         return (KnowledgeBase) Utils.load(path);
     }
 }
